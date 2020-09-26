@@ -12,6 +12,15 @@
 #include <wpi/SmallVector.h>
 #include <wpi/mutex.h>
 
+extern "C" {
+HAL_PortHandle rust_create_port_handle(HAL_PortHandle base_handle,
+                                       uint8_t channel, uint8_t module);
+HAL_PortHandle rust_create_port_handle_for_spi(HAL_PortHandle base_handle,
+                                               uint8_t channel);
+HAL_Handle rust_create_handle(int16_t index, uint8_t handleType,
+                              int16_t version);
+}
+
 namespace hal {
 static wpi::SmallVector<HandleBase*, 32>* globalHandles = nullptr;
 static wpi::mutex globalHandleMutex;
@@ -56,40 +65,16 @@ HAL_PortHandle createPortHandle(uint8_t channel, uint8_t module) {
   // set last 8 bits, then shift to first 8 bits
   HAL_PortHandle handle = static_cast<HAL_PortHandle>(HAL_HandleEnum::Port);
   handle = handle << 24;
-  // shift module and add to 3rd set of 8 bits
-  int32_t temp = module;
-  temp = (temp << 8) & 0xff00;
-  handle += temp;
-  // add channel to last 8 bits
-  handle += channel;
-  return handle;
+  return rust_create_port_handle(handle, channel, module);
 }
 HAL_PortHandle createPortHandleForSPI(uint8_t channel) {
   // set last 8 bits, then shift to first 8 bits
   HAL_PortHandle handle = static_cast<HAL_PortHandle>(HAL_HandleEnum::Port);
   handle = handle << 16;
-  // set second set up bits to 1
-  int32_t temp = 1;
-  temp = (temp << 8) & 0xff00;
-  handle += temp;
-  // shift to last set of bits
-  handle = handle << 8;
-  // add channel to last 8 bits
-  handle += channel;
-  return handle;
+  return rust_create_port_handle_for_spi(handle, channel);
 }
 HAL_Handle createHandle(int16_t index, HAL_HandleEnum handleType,
                         int16_t version) {
-  if (index < 0) return HAL_kInvalidHandle;
-  uint8_t hType = static_cast<uint8_t>(handleType);
-  if (hType == 0 || hType > 127) return HAL_kInvalidHandle;
-  // set last 8 bits, then shift to first 8 bits
-  HAL_Handle handle = hType;
-  handle = handle << 8;
-  handle += static_cast<uint8_t>(version);
-  handle = handle << 16;
-  // add index to set last 16 bits
-  handle += index;
-  return handle;
+  return rust_create_handle(index, static_cast<uint8_t>(handleType), version);
 }
 }  // namespace hal

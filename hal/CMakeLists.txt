@@ -2,6 +2,8 @@ project(hal)
 
 include(CompileWarnings)
 include(AddTest)
+include(ImportCorrosion)
+wpilib_import_corrosion()
 
 file(STRINGS src/generate/Instances.txt RAW_INSTANCES)
 file(STRINGS src/generate/ResourceType.txt RAW_RESOURCE_TYPES)
@@ -32,6 +34,8 @@ file(GLOB
     hal_sim_native_src src/main/native/sim/mockdata/*.cpp)
 add_library(hal ${hal_shared_native_src})
 wpilib_target_warnings(hal)
+corrosion_import_crate(MANIFEST_PATH src/main/native/rust/handles/Cargo.toml)
+target_link_libraries(hal PRIVATE rust-handles)
 set_target_properties(hal PROPERTIES DEBUG_POSTFIX "d")
 
 if(USE_EXTERNAL_HAL)
