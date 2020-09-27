@@ -6,20 +6,12 @@
 /*----------------------------------------------------------------------------*/
 
 #include "hal/handles/HandlesInternal.h"
+#include "../rust/handles/include/bindings.h"
 
 #include <algorithm>
 
 #include <wpi/SmallVector.h>
 #include <wpi/mutex.h>
-
-extern "C" {
-HAL_PortHandle rust_create_port_handle(HAL_PortHandle base_handle,
-                                       uint8_t channel, uint8_t module);
-HAL_PortHandle rust_create_port_handle_for_spi(HAL_PortHandle base_handle,
-                                               uint8_t channel);
-HAL_Handle rust_create_handle(int16_t index, uint8_t handleType,
-                              int16_t version);
-}
 
 namespace hal {
 static wpi::SmallVector<HandleBase*, 32>* globalHandles = nullptr;
@@ -62,16 +54,12 @@ void HandleBase::ResetGlobalHandles() {
   }
 }
 HAL_PortHandle createPortHandle(uint8_t channel, uint8_t module) {
-  // set last 8 bits, then shift to first 8 bits
-  HAL_PortHandle handle = static_cast<HAL_PortHandle>(HAL_HandleEnum::Port);
-  handle = handle << 24;
-  return rust_create_port_handle(handle, channel, module);
+  return rust_create_port_handle(static_cast<int32_t>(HAL_HandleEnum::Port),
+                                 channel, module);
 }
 HAL_PortHandle createPortHandleForSPI(uint8_t channel) {
-  // set last 8 bits, then shift to first 8 bits
-  HAL_PortHandle handle = static_cast<HAL_PortHandle>(HAL_HandleEnum::Port);
-  handle = handle << 16;
-  return rust_create_port_handle_for_spi(handle, channel);
+  return rust_create_port_handle_for_spi(
+      static_cast<int32_t>(HAL_HandleEnum::Port), channel);
 }
 HAL_Handle createHandle(int16_t index, HAL_HandleEnum handleType,
                         int16_t version) {
