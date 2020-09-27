@@ -85,10 +85,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install Dependencies
         run: |
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
           if [ "$RUNNER_OS" == "macOS" ]; then
             brew install opencv
-          else
-            sudo apt update; sudo apt install cargo
           fi
       - name: configure
         run: mkdir build && cd build && cmake -DWITHOUT_ALLWPILIB=OFF -DWITH_TESTS=ON ${{ matrix.flags }} ..
