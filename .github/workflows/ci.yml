@@ -87,6 +87,8 @@ jobs:
         run: |
           if [ "$RUNNER_OS" == "macOS" ]; then
             brew install opencv
+          else
+            sudo apt update; sudo apt install cargo
           fi
       - name: configure
         run: mkdir build && cd build && cmake -DWITHOUT_ALLWPILIB=OFF -DWITH_TESTS=ON ${{ matrix.flags }} ..
